@@ -16,6 +16,12 @@ struct ContentView: View {
             Map(position: $locationManager.cameraPosition) {
                 UserAnnotation()
             }
+            
+            Text(locationManager.state ?? "Unknowned")
+                .padding()
+                .background(.secondary)
+                .clipShape(.capsule)
+                .padding(25)
         }
     }
 }

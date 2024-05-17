@@ -42,6 +42,25 @@ final class LocationManager: NSObject, ObservableObject {
             break
         }
     }
+    
+    func getVoivodeship(from location: CLLocation){
+        geocoder.reverseGeocodeLocation(location) { (placemarks, error) in
+            guard error == nil else {
+                print("Error retrieving location info: \(error!.localizedDescription)")
+                return
+            }
+            
+            if let placemark = placemarks?.first {
+                if let state = placemark.administrativeArea {
+                    self.state = state
+                } else {
+                    self.state = "Nie można odczytać województwa"
+                }
+            } else {
+                self.state = "Nie można odczytać województwa"
+            }
+        }
+    }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
@@ -62,6 +81,7 @@ extension LocationManager: CLLocationManagerDelegate {
             ))
             
             userLocation = $0.coordinate
+            getVoivodeship(from: CLLocation(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude))
         }
     }
 }
