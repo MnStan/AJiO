@@ -7,68 +7,189 @@
 
 import SwiftUI
 import MapKit
+import Combine
 
 struct ContentView: View {
-    @StateObject var locationManager = LocationManager()
+    @ObservedObject var locationManager = LocationManager()
+    @ObservedObject var networkManager = NetworkManager()
     @State var isShowingMarkers = false
     @State var counter = 1
     @State var isLoading = false
+    @State var searchText = ""
+    @State private var searchCancellable: AnyCancellable?
+    
+    @Namespace var namespace
+    @State var isShowingSearching = false
     
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Map(position: $locationManager.cameraPosition) {
-                UserAnnotation()
-                if isShowingMarkers {
-                    ForEach(locationManager.locations) { location in
-                        Annotation("Searching", coordinate: location.coordinate) {
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(Color.teal)
-                                .frame(width: 25, height: 25)
+        ZStack {
+            if isShowingSearching {
+                VStack {
+                    ZStack(alignment: .topTrailing) {
+                        Map(position: $locationManager.position) {
+                            UserAnnotation()
+                            if isShowingMarkers {
+                                ForEach(locationManager.locations) { location in
+                                    Annotation("Searching", coordinate: location.coordinate) {
+                                        RoundedRectangle(cornerRadius: 15)
+                                            .fill(Color.teal)
+                                            .frame(width: 25, height: 25)
+                                    }
+                                }
+                            }
+                        }
+                        .matchedGeometryEffect(id: "map", in: namespace)
+                        .hidden()
+                        
+                        VStack {
+                            Button {
+                                withAnimation {
+                                    isShowingSearching.toggle()
+                                }
+                            } label: {
+                                Image(systemName: "x.circle")
+                                    .resizable()
+                                    .padding()
+                                    .background(.gray)
+                                    .foregroundStyle(.black)
+                                    .clipShape(.capsule)
+                                    .frame(width: 50, height: 50)
+                                    .matchedGeometryEffect(id: "searchButton", in: namespace)
+                            }
+                            .offset(x: 40)
+                            
+                            Text(locationManager.state ?? "Unknowned")
+                                .padding()
+                                .background(.secondary)
+                                .clipShape(.capsule)
+                                .padding(25)
+                                .onTapGesture {
+                                    print(locationManager.locations)
+                                    isShowingMarkers.toggle()
+                                    print("COUNT", locationManager.locations.count)
+                                    print(locationManager.$nearVoivodeships)
+                                }
+                                .matchedGeometryEffect(id: "voivodeship", in: namespace)
+                                .hidden()
+                                .frame(height: 0)
+                        }
+                        .matchedGeometryEffect(id: "buttons", in: namespace)
+                        .padding()
+                    }
+                    .frame(height: 50)
+                    
+                    TextField("Szukaj...", text: $searchText)
+                        .matchedGeometryEffect(id: "textField", in: namespace)
+                        .padding()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.black, lineWidth: 1)
+                        )
+                        .padding()
+                        .onChange(of: searchText) { oldValue, newValue in
+                            if oldValue != newValue {
+                                networkManager.cancelFetch()
+                            }
+                            searchCancellable?.cancel()
+                            searchCancellable = Timer.publish(every: 0.5, on: .main, in: .common)
+                                .autoconnect()
+                                .first()
+                                .sink { _ in
+                                    guard newValue.count > 2 else { return }
+                                    Task {
+                                        do {
+                                            try await networkManager.fetchData(province: 6, benefit: newValue)
+                                        } catch {
+                                            print(error)
+                                        }
+                                    }
+                                }
+                        }
+                    
+                    List {
+                        Text("\(networkManager.dataArray.count)")
+                        ForEach(networkManager.dataArray, id: \.id) { name in
+                            Text(name.attributes.benefit ?? "")
                         }
                     }
+                    .matchedGeometryEffect(id: "list", in: namespace)
+                    .scrollContentBackground(.hidden)
+                    
+                    Spacer()
                 }
-            }
-            
-            VStack {
-                Text(locationManager.state ?? "Unknowned")
-                    .padding()
-                    .background(.secondary)
-                    .clipShape(.capsule)
-                    .padding(25)
-                    .onTapGesture {
-                        print(locationManager.locations)
-                        isShowingMarkers.toggle()
-                        print("COUNT", locationManager.locations.count)
-                        print(locationManager.$nearVoivodeships)
-                        
+                .matchedGeometryEffect(id: "background", in: namespace)
+                .background(.thinMaterial)
+            } else {
+                ZStack(alignment: .bottomTrailing) {
+                    Map(position: $locationManager.position) {
+                        UserAnnotation()
+                        if isShowingMarkers {
+                            ForEach(locationManager.locations) { location in
+                                Annotation("Searching", coordinate: location.coordinate) {
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .fill(Color.teal)
+                                        .frame(width: 25, height: 25)
+                                }
+                            }
+                        }
                     }
-                
-                if locationManager.isLoadingNearVoivodeships {
-                    RoundedRectangle(cornerRadius: 10)
-                         .fill(Color.blue)
-                         .frame(width: 80, height: 20)
-                         .offset(x: isLoading ? -50 : 50)
-                         .animation(.easeInOut.repeatForever(), value: isLoading)
-                         .onAppear {
-                             self.isLoading = true
-                         }
-                         .padding()
-                                
-                } else {
-                    Text("\(locationManager.nearVoivodeships)")
+                    .matchedGeometryEffect(id: "map", in: namespace)
+                    
+                    VStack {
+                        Button {
+                            withAnimation {
+                                isShowingSearching.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .resizable()
+                                .padding()
+                                .background(.gray)
+                                .foregroundStyle(.black)
+                                .clipShape(.capsule)
+                                .frame(width: 50, height: 50)
+                                .matchedGeometryEffect(id: "searchButton", in: namespace)
+                        }
+                        
+                        Text(locationManager.state ?? "Unknowned")
+                            .padding()
+                            .background(.secondary)
+                            .clipShape(.capsule)
+                            .padding(25)
+                            .onTapGesture {
+                                print(locationManager.locations)
+                                isShowingMarkers.toggle()
+                                print("COUNT", locationManager.locations.count)
+                                print(locationManager.$nearVoivodeships)
+                            }
+                            .matchedGeometryEffect(id: "voivodeship", in: namespace)
+                        
+                        TextField("Szukaj", text: $searchText)
+                            .matchedGeometryEffect(id: "textField", in: namespace)
+                            .padding(.horizontal, 50)
+                            .frame(width: 0, height: 0)
+                            .hidden()
+                        
+                        List { }
+                            .matchedGeometryEffect(id: "list", in: namespace)
+                            .frame(width: 0, height: 0)
+                            .hidden()
+                    }
+                    .matchedGeometryEffect(id: "buttons", in: namespace)
+                    .matchedGeometryEffect(id: "background", in: namespace)
+                    .background(Color.clear)
                 }
             }
         }
-        .alert("Wystąpił problem", isPresented: $locationManager.shouldShowThrottledError) {
-            Button("Tak") {
-                locationManager.getPointsVoivodeshipsAgain()
-                isLoading = false
-            }
-            Button("Nie", role: .cancel) { }
-        } message: {
-            Text("Osiągnięto limit zapytań do wyszukiwania najbliższych województw.\nCzy chcesz pobrać je ponownie?")
-        }
-
+        //        .alert("Wystąpił problem", isPresented: $locationManager.shouldShowThrottledError) {
+        //            Button("Tak") {
+        //                locationManager.getPointsVoivodeshipsAgain()
+        //                isLoading = false
+        //            }
+        //            Button("Nie", role: .cancel) { }
+        //        } message: {
+        //            Text("Osiągnięto limit zapytań do wyszukiwania najbliższych województw.\nCzy chcesz pobrać je ponownie?")
+        //        }
     }
 }
 

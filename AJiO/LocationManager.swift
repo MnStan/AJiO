@@ -17,11 +17,9 @@ struct LocationData: Identifiable {
 final class LocationManager: NSObject, ObservableObject {
     private let locationManager = CLLocationManager()
     
-    @Published var cameraPosition = MapCameraPosition.region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 50.049683, longitude: 19.944544),
-        span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
-    ))
-    
+    @Published var position: MapCameraPosition = .userLocation(
+        followsHeading: true, fallback: .automatic
+    )
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var state: String?
     @Published private var surroundingVoivodeships: [String] = []
@@ -155,10 +153,6 @@ extension LocationManager: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         locations.last.map { location in
-            cameraPosition = MapCameraPosition.region(MKCoordinateRegion(
-                center: location.coordinate,
-                span: .init(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            ))
             userLocation = location.coordinate
             
             getVoivodeship(from: CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)) { [weak self] voivodeship in
