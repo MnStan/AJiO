@@ -110,7 +110,6 @@ final class LocationManager: NSObject, ObservableObject {
             guard let self else { return }
             self.getPointsVoivodeships(from: self.locations) { voivodeships in
                 self.nearVoivodeships = Set(voivodeships)
-                print(self.nearVoivodeships)
             }
         }
     }
@@ -137,6 +136,18 @@ final class LocationManager: NSObject, ObservableObject {
         }
         
         self.locations = points
+    }
+    
+    func getVoivodeshipCode() -> String? {
+        guard let state = state else { return nil }
+        
+        let standarizedName = state.replacingOccurrences(of: "-", with: "").lowercased().folding(options: .diacriticInsensitive, locale: .current)
+
+        if let voivodeship = Voivodeship.allCases.first(where: { $0.name == standarizedName }) {
+            return voivodeship.rawValue
+        } else {
+            return nil
+        }
     }
 }
 

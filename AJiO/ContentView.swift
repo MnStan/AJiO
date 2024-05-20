@@ -98,7 +98,8 @@ struct ContentView: View {
                                     guard newValue.count > 2 else { return }
                                     Task {
                                         do {
-                                            try await networkManager.fetchData(province: 6, benefit: newValue)
+                                            guard let voivodeShipNumber = locationManager.getVoivodeshipCode() else { return }
+                                            try await networkManager.fetchData(province: voivodeShipNumber, benefit: newValue)
                                         } catch {
                                             print(error)
                                         }
@@ -108,6 +109,7 @@ struct ContentView: View {
                     
                     List {
                         Text("\(networkManager.dataArray.count)")
+                        Text("\(networkManager.totalItems)")
                         ForEach(networkManager.dataArray, id: \.id) { name in
                             Text(name.attributes.benefit ?? "")
                         }
@@ -161,6 +163,7 @@ struct ContentView: View {
                                 isShowingMarkers.toggle()
                                 print("COUNT", locationManager.locations.count)
                                 print(locationManager.$nearVoivodeships)
+                                print(locationManager.getVoivodeshipCode() ?? "UNKN")
                             }
                             .matchedGeometryEffect(id: "voivodeship", in: namespace)
                         
@@ -181,15 +184,15 @@ struct ContentView: View {
                 }
             }
         }
-        //        .alert("Wystąpił problem", isPresented: $locationManager.shouldShowThrottledError) {
-        //            Button("Tak") {
-        //                locationManager.getPointsVoivodeshipsAgain()
-        //                isLoading = false
-        //            }
-        //            Button("Nie", role: .cancel) { }
-        //        } message: {
-        //            Text("Osiągnięto limit zapytań do wyszukiwania najbliższych województw.\nCzy chcesz pobrać je ponownie?")
-        //        }
+                .alert("Wystąpił problem", isPresented: $locationManager.shouldShowThrottledError) {
+                    Button("Tak") {
+                        locationManager.getPointsVoivodeshipsAgain()
+                        isLoading = false
+                    }
+                    Button("Nie", role: .cancel) { }
+                } message: {
+                    Text("Osiągnięto limit zapytań do wyszukiwania najbliższych województw.\nCzy chcesz pobrać je ponownie?")
+                }
     }
 }
 

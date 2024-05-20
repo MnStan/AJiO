@@ -7,15 +7,17 @@
 
 import Foundation
 
+@MainActor
 class NetworkManager: ObservableObject {
-    @Published var apiResponse: APIResponse? = nil
     @Published var dataArray: [DataElement] = []
     @Published var isFetching = false
-    private var shouldFetchMore = true
-    private var currentPage = 1
     @Published var totalItems: Int? = nil
     
-    private var currentTask: Task<Void, Error>? = nil
+    private var shouldFetchMore = true
+    private var currentPage = 1
+    private let maxRequestsPerSecond = 10
+    private var requestCount = 0
+    private var requestStartTime: Date?
     
     let baseURL = "https://api.nfz.gov.pl/app-itl-api/queues"
     
@@ -25,9 +27,8 @@ class NetworkManager: ObservableObject {
         case invalidURL
     }
     
-    func fetchData(province: Int, benefit: String) async throws {
+    func fetchData(province: String, benefit: String) async throws {
         guard !isFetching else { return }
-        print("Fetching, page: ", currentPage)
         isFetching = true
         
         defer {
@@ -36,26 +37,46 @@ class NetworkManager: ObservableObject {
         
         if currentPage == 1 {
             dataArray.removeAll()
+            totalItems = nil
         }
         
         guard var components = URLComponents(string: baseURL) else {
             throw FetchError.invalidURL
         }
-
+        
         components.queryItems = [
             URLQueryItem(name: "page", value: String(currentPage)),
             URLQueryItem(name: "limit", value: "25"),
             URLQueryItem(name: "format", value: "json"),
             URLQueryItem(name: "case", value: "1"),
-            URLQueryItem(name: "province", value: "0" + String(province)),
+            URLQueryItem(name: "province", value: province),
             URLQueryItem(name: "benefit", value: benefit),
             URLQueryItem(name: "benefitForChildren", value: "false"),
             URLQueryItem(name: "api-version", value: "1.3")
         ]
-
+        
         guard let url = components.url else {
             throw FetchError.invalidURL
         }
+        
+        if let startTime = requestStartTime {
+            let elapsed = Date().timeIntervalSince(startTime)
+            if elapsed < 1 {
+                if requestCount >= maxRequestsPerSecond {
+                    let waitTime = 1 - elapsed
+                    try await Task.sleep(nanoseconds: UInt64(waitTime * 1_000_000_000))
+                    requestCount = 0
+                    requestStartTime = Date()
+                }
+            } else {
+                requestCount = 0
+                requestStartTime = Date()
+            }
+        } else {
+            requestStartTime = Date()
+        }
+        
+        requestCount += 1
         
         let (data, response) = try await URLSession.shared.data(for: URLRequest(url: url))
         guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw FetchError.badRequest }
@@ -67,13 +88,12 @@ class NetworkManager: ObservableObject {
             dateFormatter.dateFormat = "yyyy-MM-dd"
             decoder.dateDecodingStrategy = .formatted(dateFormatter)
             let decodedData = try decoder.decode(APIResponse.self, from: data)
-            currentTask = Task { @MainActor in
+            Task { @MainActor in
                 if self.totalItems == nil {
                     self.totalItems = decodedData.meta.count
                 }
                 
-                self.apiResponse = decodedData
-                dataArray.append(contentsOf: decodedData.data)
+                self.dataArray.append(contentsOf: decodedData.data)
                 
                 if let totalItems = self.totalItems, dataArray.count < totalItems {
                     currentPage += 1
@@ -84,7 +104,6 @@ class NetworkManager: ObservableObject {
                 }
             }
         } catch {
-            print("JSON error", error)
             throw FetchError.badJSON
         }
     }
@@ -93,5 +112,6 @@ class NetworkManager: ObservableObject {
         isFetching = false
         dataArray.removeAll()
         currentPage = 1
+        totalItems = nil
     }
 }
