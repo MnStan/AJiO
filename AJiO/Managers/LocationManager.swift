@@ -15,10 +15,12 @@ struct LocationData: Identifiable {
 }
 
 final class LocationManager: NSObject, ObservableObject {
+    static let shared = LocationManager()
+    
     private let locationManager = CLLocationManager()
     
     @Published var position: MapCameraPosition = .userLocation(
-        followsHeading: true, fallback: .automatic
+        fallback: .automatic
     )
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var state: String?
@@ -34,7 +36,6 @@ final class LocationManager: NSObject, ObservableObject {
     
     override init() {
         super.init()
-        
         self.locationManager.delegate = self
         self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
         self.setup()
@@ -44,7 +45,6 @@ final class LocationManager: NSObject, ObservableObject {
         switch locationManager.authorizationStatus {
         case .authorizedWhenInUse:
             locationManager.requestLocation()
-            locationManager.startUpdatingLocation()
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         default:
@@ -75,6 +75,7 @@ final class LocationManager: NSObject, ObservableObject {
         var errorOcurred = false
         
         var delay: TimeInterval = 0.0
+        print(points.count)
         for point in points {
             var leaveDispatchGroup = true
             
@@ -82,6 +83,7 @@ final class LocationManager: NSObject, ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                 guard let self = self else { return }
                 self.getVoivodeship(from: CLLocation(latitude: point.coordinate.latitude, longitude: point.coordinate.longitude)) { voivodeship, error in
+                    print("Getting voivodeship from points")
                     if let voivodeship = voivodeship {
                         if voivodeship != self.state {
                             voivodeships.append(voivodeship)
@@ -159,6 +161,15 @@ final class LocationManager: NSObject, ObservableObject {
             return nil
         }
     }
+    
+    func getProviderDistance(location: CLLocation) -> String {
+        guard let userLocation else { return "" }
+    
+        let currentUserLocation = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+        let providerLocation = CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
+        
+        return String(Int(currentUserLocation.distance(from: providerLocation) / 1000)) + " km"
+    }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
@@ -173,6 +184,7 @@ extension LocationManager: CLLocationManagerDelegate {
     
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("UPDATE LOCATION!!!!!!!")
         locations.last.map { location in
             userLocation = location.coordinate
             
@@ -181,7 +193,7 @@ extension LocationManager: CLLocationManagerDelegate {
                 self.state = voivodeship
                 
                 if error {
-                    locationManager.startUpdatingLocation()
+                    locationManager.requestLocation()
                 }
             }
             

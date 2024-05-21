@@ -9,6 +9,7 @@ import Foundation
 
 @MainActor
 class NetworkManager: ObservableObject {
+    static let shared = NetworkManager()
     @Published var dataArray: [DataElement] = []
     @Published var isFetching = false
     @Published var totalItems: Int? = nil
@@ -83,7 +84,7 @@ class NetworkManager: ObservableObject {
         
         do {
             let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            decoder.keyDecodingStrategy = .convertFromKebabCase
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             decoder.dateDecodingStrategy = .formatted(dateFormatter)
@@ -109,6 +110,7 @@ class NetworkManager: ObservableObject {
     }
     
     func cancelFetch() {
+        print("Cancel fetch called")
         isFetching = false
         dataArray.removeAll()
         currentPage = 1

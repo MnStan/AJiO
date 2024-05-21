@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct ListItem: View {
     var item: DataElement
+    
     var body: some View {
         VStack(alignment: .leading) {
             VStack(alignment: .leading) {
@@ -19,7 +21,7 @@ struct ListItem: View {
                     .font(.caption).bold()
             }
             .padding(.vertical, 2)
-                
+            
             HStack {
                 Text("Najbliższy termin: ")
                     .font(.caption).bold()
@@ -29,13 +31,23 @@ struct ListItem: View {
                 
                 Spacer()
                 
-                Image(systemName: "location")
-                Text(item.attributes.locality ?? "")
-                    .font(.caption).bold()
+                VStack(alignment: .trailing) {
+                    HStack {
+                        Image(systemName: "location")
+                        Text(item.attributes.locality ?? "")
+                            .font(.caption).bold()
+                    }
+                    
+                    if let latitude = item.attributes.latitude, let longitude = item.attributes.longitude {
+                        Text(LocationManager.shared.getProviderDistance(location: CLLocation(latitude: latitude, longitude: longitude)))
+                            .font(.caption2)
+                    }
+                }
             }
         }
     }
 }
+
 
 #Preview {
     ListItem(item: .defaultDataElement)

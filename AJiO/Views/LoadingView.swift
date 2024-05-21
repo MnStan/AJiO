@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct LoadingView: View {
-    @Binding var shouldShowNextScreen: Bool
-    @EnvironmentObject var locationManager: LocationManager
+//    @Binding var shouldShowNextScreen: Bool
+    @ObservedObject var locationManager = LocationManager.shared
     @State private var isAnimating = false
     @State private var currentSymbol = "location"
     @State private var rotationAngle: Double = 0
@@ -54,7 +54,7 @@ struct LoadingView: View {
             } message: {
                 Text("Osiągnięto limit zapytań do wyszukiwania najbliższych województw.\nCzy chcesz pobrać je ponownie?")
             }
-            .navigationDestination(isPresented: .constant($shouldShowNextScreen.wrappedValue && !$locationManager.isLoadingNearVoivodeships.wrappedValue)) {
+            .navigationDestination(isPresented: .constant(locationManager.didEndLocationWork && !$locationManager.isLoadingNearVoivodeships.wrappedValue)) {
                 ContentView().environmentObject(locationManager).navigationBarBackButtonHidden()
             }
         }
@@ -74,5 +74,5 @@ struct LoadingView: View {
 
 
 #Preview {
-    LoadingView(shouldShowNextScreen: .constant(false))
+    LoadingView()
 }

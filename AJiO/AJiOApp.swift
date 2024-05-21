@@ -9,11 +9,9 @@ import SwiftUI
 
 @main
 struct AJiOApp: App {
-    @ObservedObject var locationManager = LocationManager()
-    
     var body: some Scene {
         WindowGroup {
-            LoadingView(shouldShowNextScreen: $locationManager.didEndLocationWork).environmentObject(locationManager)
+            LoadingView()
         }
     }
 }
