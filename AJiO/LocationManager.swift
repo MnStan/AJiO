@@ -22,11 +22,11 @@ final class LocationManager: NSObject, ObservableObject {
     )
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var state: String?
-    @Published private var surroundingVoivodeships: [String] = []
     @Published var locations: [LocationData] = []
     @Published var nearVoivodeships: Set<String> = []
     @Published var isLoadingNearVoivodeships = true
     @Published var shouldShowThrottledError = false
+    @Published var didEndLocationWork = false
     
     private let geocoder = CLGeocoder()
     private let radius: CLLocationDistance = 100000 // 100 km
@@ -52,28 +52,28 @@ final class LocationManager: NSObject, ObservableObject {
         }
     }
     
-    private func getVoivodeship(from location: CLLocation, completion: @escaping (String?) -> Void) {
+    private func getVoivodeship(from location: CLLocation, completion: @escaping (String?, Bool) -> Void) {
         geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
             guard let self else { return }
             if error != nil {
-                self.shouldShowThrottledError = true
                 nearVoivodeships.removeAll()
-                completion(nil)
+                completion(nil, true)
             }
             
             if let placemark = placemarks?.first, placemark.country == "Polska" {
                 let voivodeship = placemark.administrativeArea
-                completion(voivodeship)
+                completion(voivodeship, false)
             } else {
-                completion(nil)
+                completion(nil, false)
             }
         }
     }
 
-    private func getPointsVoivodeships(from points: [LocationData], completion: @escaping ([String]) -> Void) {
+    private func getPointsVoivodeships(from points: [LocationData], completion: @escaping ([String], Bool) -> Void) {
         let dispatchGroup = DispatchGroup()
         var voivodeships: [String] = []
-
+        var errorOcurred = false
+        
         var delay: TimeInterval = 0.0
         for point in points {
             var leaveDispatchGroup = true
@@ -81,11 +81,15 @@ final class LocationManager: NSObject, ObservableObject {
             dispatchGroup.enter()
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                 guard let self = self else { return }
-                self.getVoivodeship(from: CLLocation(latitude: point.coordinate.latitude, longitude: point.coordinate.longitude)) { voivodeship in
+                self.getVoivodeship(from: CLLocation(latitude: point.coordinate.latitude, longitude: point.coordinate.longitude)) { voivodeship, error in
                     if let voivodeship = voivodeship {
                         if voivodeship != self.state {
                             voivodeships.append(voivodeship)
                         }
+                    }
+                    
+                    if error {
+                        errorOcurred = true
                     }
                     
                     if leaveDispatchGroup {
@@ -94,13 +98,13 @@ final class LocationManager: NSObject, ObservableObject {
                     }
                 }
             }
-            delay += 0.5
+            delay += 0.2
         }
         
         dispatchGroup.notify(queue: .main) { [weak self] in
             guard let self else { return }
             self.isLoadingNearVoivodeships = false
-            completion(voivodeships)
+            completion(voivodeships, errorOcurred)
         }
     }
     
@@ -108,8 +112,14 @@ final class LocationManager: NSObject, ObservableObject {
         isLoadingNearVoivodeships = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
             guard let self else { return }
-            self.getPointsVoivodeships(from: self.locations) { voivodeships in
-                self.nearVoivodeships = Set(voivodeships)
+            self.getPointsVoivodeships(from: self.locations) { voivodeships, error in
+                if error {
+                    self.shouldShowThrottledError = true
+                } else {
+                    self.nearVoivodeships = Set(voivodeships)
+                    self.shouldShowThrottledError = false
+                    self.didEndLocationWork = true
+                }
             }
         }
     }
@@ -166,17 +176,26 @@ extension LocationManager: CLLocationManagerDelegate {
         locations.last.map { location in
             userLocation = location.coordinate
             
-            getVoivodeship(from: CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)) { [weak self] voivodeship in
+            getVoivodeship(from: CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)) { [weak self] voivodeship, error in
                 guard let self else { return }
                 self.state = voivodeship
+                
+                if error {
+                    locationManager.startUpdatingLocation()
+                }
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 guard let self else { return }
+                
                 pointsOnCircle(center: location.coordinate, radius: radius, numberOfPoints: numberOfPoints)
-                getPointsVoivodeships(from: self.locations) { voivodeships in
-                    self.nearVoivodeships = Set(voivodeships)
-                    print(self.nearVoivodeships)
+                getPointsVoivodeships(from: self.locations) { voivodeships, error in
+                    if error {
+                        self.shouldShowThrottledError = true
+                    } else {
+                        self.nearVoivodeships = Set(voivodeships)
+                        self.didEndLocationWork = true
+                    }
                 }
             }
         }

@@ -18,6 +18,7 @@
 		F60423222BF7DD03006FBE67 /* APIResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60423212BF7DD03006FBE67 /* APIResults.swift */; };
 		F60423242BF7DD5C006FBE67 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60423232BF7DD5C006FBE67 /* NetworkManager.swift */; };
 		F60423262BF8C88C006FBE67 /* Voivodeship.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60423252BF8C88C006FBE67 /* Voivodeship.swift */; };
+		F611D7A02BFBD39800A50CF5 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F611D79F2BFBD39800A50CF5 /* LoadingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +53,7 @@
 		F60423212BF7DD03006FBE67 /* APIResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResults.swift; sourceTree = "<group>"; };
 		F60423232BF7DD5C006FBE67 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		F60423252BF8C88C006FBE67 /* Voivodeship.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Voivodeship.swift; sourceTree = "<group>"; };
+		F611D79F2BFBD39800A50CF5 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +112,7 @@
 				F60423212BF7DD03006FBE67 /* APIResults.swift */,
 				F60423232BF7DD5C006FBE67 /* NetworkManager.swift */,
 				F60423252BF8C88C006FBE67 /* Voivodeship.swift */,
+				F611D79F2BFBD39800A50CF5 /* LoadingView.swift */,
 			);
 			path = AJiO;
 			sourceTree = "<group>";
@@ -274,6 +277,7 @@
 				F60423242BF7DD5C006FBE67 /* NetworkManager.swift in Sources */,
 				F60423202BF686A5006FBE67 /* LocationManager.swift in Sources */,
 				F60423262BF8C88C006FBE67 /* Voivodeship.swift in Sources */,
+				F611D7A02BFBD39800A50CF5 /* LoadingView.swift in Sources */,
 				F60423222BF7DD03006FBE67 /* APIResults.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

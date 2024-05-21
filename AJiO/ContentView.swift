@@ -10,11 +10,10 @@ import MapKit
 import Combine
 
 struct ContentView: View {
-    @ObservedObject var locationManager = LocationManager()
+    @EnvironmentObject var locationManager: LocationManager
     @ObservedObject var networkManager = NetworkManager()
     @State var isShowingMarkers = false
     @State var counter = 1
-    @State var isLoading = false
     @State var searchText = ""
     @State private var searchCancellable: AnyCancellable?
     
@@ -63,12 +62,7 @@ struct ContentView: View {
                                 .background(.secondary)
                                 .clipShape(.capsule)
                                 .padding(25)
-                                .onTapGesture {
-                                    print(locationManager.locations)
-                                    isShowingMarkers.toggle()
-                                    print("COUNT", locationManager.locations.count)
-                                    print(locationManager.$nearVoivodeships)
-                                }
+                                .onTapGesture { }
                                 .matchedGeometryEffect(id: "voivodeship", in: namespace)
                                 .hidden()
                                 .frame(height: 0)
@@ -159,10 +153,8 @@ struct ContentView: View {
                             .clipShape(.capsule)
                             .padding(25)
                             .onTapGesture {
-                                print(locationManager.locations)
                                 isShowingMarkers.toggle()
-                                print("COUNT", locationManager.locations.count)
-                                print(locationManager.$nearVoivodeships)
+                                print(locationManager.nearVoivodeships)
                                 print(locationManager.getVoivodeshipCode() ?? "UNKN")
                             }
                             .matchedGeometryEffect(id: "voivodeship", in: namespace)
@@ -184,18 +176,9 @@ struct ContentView: View {
                 }
             }
         }
-                .alert("Wystąpił problem", isPresented: $locationManager.shouldShowThrottledError) {
-                    Button("Tak") {
-                        locationManager.getPointsVoivodeshipsAgain()
-                        isLoading = false
-                    }
-                    Button("Nie", role: .cancel) { }
-                } message: {
-                    Text("Osiągnięto limit zapytań do wyszukiwania najbliższych województw.\nCzy chcesz pobrać je ponownie?")
-                }
     }
 }
-
-#Preview {
-    ContentView()
-}
+    
+    #Preview {
+        ContentView().environmentObject(LocationManager())
+    }
