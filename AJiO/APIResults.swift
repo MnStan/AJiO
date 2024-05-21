@@ -76,7 +76,7 @@ struct Attributes: Decodable {
     let dates: Dates?
     let benefitsProvided: BenefitsProvided?
     
-    static let defaultAttributes = Attributes(case: 1, benefit: "", manyPlaces: "", provider: "", providerCode: "", regonProvider: "", nipProvider: "", terytProvider: "", place: "", address: "", locality: "", phone: "", terytPlace: "", registryNumber: "", idResortPartVII: "", idResortPartVIII: "", benefitsForChildren: "", covid19: "", toilet: "", ramp: "", carPark: "", elevator: "", latitude: 50.0, longitude: 50.0, statistics: nil, dates: nil, benefitsProvided: nil)
+    static let defaultAttributes = Attributes(case: 1, benefit: "PORADNIA STOMATOLOGICZNA", manyPlaces: "N", provider: "IPL - LUCYNA CHANIECKA-ZIELIŃSKA", providerCode: "064/400267", regonProvider: "491882749", nipProvider: "7351029116", terytProvider: "1215052", place: "PORADNIA STOMATOLOGICZNA", address: "UL. OSIELEC 540", locality: "OSIELEC", phone: "+48 18 277 35 50", terytPlace: "1215052", registryNumber: "000000034125-L-51", idResortPartVII: "001", idResortPartVIII: "1800", benefitsForChildren: "null", covid19: "N", toilet: "Y", ramp: "Y", carPark: "Y", elevator: "N", latitude: 50.0, longitude: 50.0, statistics: Statistics.defaultStatistics, dates: Dates.defaultDates, benefitsProvided: nil)
 }
 
 // MARK: - Statistics
@@ -84,7 +84,7 @@ struct Statistics: Decodable {
     let providerData: ProviderData?
     let computedData: ComputedData?
     
-    static let defaultStatistics = Statistics(providerData: nil, computedData: nil)
+    static let defaultStatistics = Statistics(providerData: ProviderData.defaultProviderData, computedData: nil)
 }
 
 // MARK: - ProviderData
@@ -93,6 +93,8 @@ struct ProviderData: Decodable {
     let removed: Int
     let averagePeriod: Int?
     let update: String
+    
+    static let defaultProviderData = ProviderData(awaiting: 10, removed: 5, averagePeriod: 5, update: "2024-04")
 }
 
 // MARK: - ComputedData
@@ -106,12 +108,16 @@ struct BenefitsProvided: Decodable {
     let typeOfBenefit: Int?
     let year: Int?
     let amount: Double?
+    
+    static let defaultBenefitsProvided = BenefitsProvided(typeOfBenefit: 5, year: 2024, amount: 24)
 }
 
 struct Dates: Decodable {
     let applicable: Bool?
-    let date: Date?
-    let dateSituationAsAt: Date?
+    let date: String?
+    let dateSituationAsAt: String?
+    
+    static let defaultDates = Dates(applicable: true, date: "2024-05-15", dateSituationAsAt: "2024-05-15")
 }
 
 // MARK: - Data Element

@@ -104,8 +104,15 @@ struct ContentView: View {
                     List {
                         Text("\(networkManager.dataArray.count)")
                         Text("\(networkManager.totalItems)")
+                        #warning("Debug element")
+                        ListItem(item: .defaultDataElement)
+                        ListItem(item: .defaultDataElement)
+                        ListItem(item: .defaultDataElement)
+                        ListItem(item: .defaultDataElement)
+                        ListItem(item: .defaultDataElement)
+                        ListItem(item: .defaultDataElement)
                         ForEach(networkManager.dataArray, id: \.id) { name in
-                            Text(name.attributes.benefit ?? "")
+                            ListItem(item: name)
                         }
                     }
                     .matchedGeometryEffect(id: "list", in: namespace)
