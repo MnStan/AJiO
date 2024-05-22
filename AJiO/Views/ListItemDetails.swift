@@ -20,15 +20,16 @@ struct ListItemDetails: View {
                     
                     VStack {
                         Text(item.attributes.provider ?? "")
-                            .font(.title3).bold()
+                            .font(.subheadline).bold()
                             .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                         
                         Text(item.attributes.locality ?? "")
-                            .font(.headline).bold()
+                            .font(.subheadline).bold()
                             .padding(2)
                         
                         Text(item.attributes.address ?? "")
-                            .font(.headline).bold()
+                            .font(.subheadline).bold()
                             .padding(2)
                     }
                 }
@@ -82,12 +83,14 @@ struct ListItemDetails: View {
                 .frame(maxWidth: .infinity)
             }
             
-            if let statistics = item.attributes.statistics {
-                if let providerData = statistics.providerData {
+            GroupBox(label: Text("Informacje o kolejce")) {
+                HStack {
+                    let statistics = item.attributes.statistics
+                    let providerData = statistics?.providerData ?? nil
                     
-                    GroupBox(label: Text("Informacje o kolejce")) {
-                        HStack {
-                            GroupBox(label: Text("Ostatnia aktualizacja: \(providerData.update)")) {
+                    GroupBox(label: (providerData != nil && statistics != nil) ? Text("Ostatnia aktualizacja: \(providerData!.update)") : Text("")) {
+                        if statistics != nil  {
+                            if let providerData {
                                 VStack {
                                     Text("Oczekujący")
                                     Text("\(providerData.awaiting)")
@@ -102,7 +105,18 @@ struct ListItemDetails: View {
                                         .bold()
                                 }
                                 .padding(.top, 3)
+                                
                             }
+                        }
+                        
+                        if let firstDate = item.attributes.dates?.date {
+                            VStack {
+                                Text("Najbliższy termin")
+                                    .multilineTextAlignment(.center)
+                                Text(firstDate)
+                                    .bold()
+                            }
+                            .padding(.top, 3)
                         }
                     }
                     .padding(.top, 10)
@@ -111,22 +125,33 @@ struct ListItemDetails: View {
             
             if let phoneNumber = item.attributes.phone {
                 let formattedPhoneNumber = phoneNumber.formatPhoneNumber()
-
-                GroupBox {
-                    if let phoneURL = URL(string: "tel:+\(formattedPhoneNumber)") {
-                        Link("\(formattedPhoneNumber)", destination: phoneURL)
-                            .foregroundColor(.blue)
-                            .padding()
-                    } else {
-                        Text("Unable to create phone link.")
-                            .foregroundColor(.red)
-                            .padding()
+                Text(formattedPhoneNumber)
+                
+                if isValidPolishPhoneNumber(formattedPhoneNumber) {
+                    GroupBox {
+                        if let phoneURL = URL(string: "tel:+\(formattedPhoneNumber)") {
+                            Link("\(formattedPhoneNumber)", destination: phoneURL)
+                                .foregroundColor(.blue)
+                                .padding()
+                        } else {
+                            Text("Unable to create phone link.")
+                                .foregroundColor(.red)
+                                .padding()
+                        }
                     }
+                    .padding(.top, 3)
                 }
-                .padding(.top, 10)
+                
             }
         }
         .padding()
+    }
+    
+    func isValidPolishPhoneNumber(_ phoneNumber: String) -> Bool {
+        let phoneNumberPattern = #"^(\+48[ -]?\d{3}[ -]?\d{3}[ -]?\d{3})|(^\d{2}[ -]?\d{3}[ -]?\d{3})$"#
+        let regex = try! Regex(phoneNumberPattern)
+        
+        return phoneNumber.firstMatch(of: regex) != nil
     }
 }
 

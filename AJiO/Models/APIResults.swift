@@ -76,7 +76,7 @@ struct Attributes: Decodable {
     let dates: Dates?
     let benefitsProvided: BenefitsProvided?
     
-    static let defaultAttributes = Attributes(case: 1, benefit: "PORADNIA STOMATOLOGICZNA", manyPlaces: "N", provider: "IPL - LUCYNA CHANIECKA-ZIELIŃSKA", providerCode: "064/400267", regonProvider: "491882749", nipProvider: "7351029116", terytProvider: "1215052", place: "PORADNIA STOMATOLOGICZNA", address: "UL. OSIELEC 540", locality: "OSIELEC", phone: "48 18 277-35 50", terytPlace: "1215052", registryNumber: "000000034125-L-51", idResortPartVII: "001", idResortPartVIII: "1800", benefitsForChildren: "Y", covid19: "N", toilet: "Y", ramp: "Y", carPark: "Y", elevator: "Y", latitude: 50.0, longitude: 50.0, statistics: Statistics.defaultStatistics, dates: Dates.defaultDates, benefitsProvided: nil)
+    static let defaultAttributes = Attributes(case: 1, benefit: "PORADNIA STOMATOLOGICZNA", manyPlaces: "N", provider: "IPL - LUCYNA CHANIECKA-ZIELIŃSKA", providerCode: "064/400267", regonProvider: "491882749", nipProvider: "7351029116", terytProvider: "1215052", place: "PORADNIA STOMATOLOGICZNA", address: "UL. OSIELEC 540", locality: "OSIELEC", phone: "+24 277-35 51", terytPlace: "1215052", registryNumber: "000000034125-L-51", idResortPartVII: "001", idResortPartVIII: "1800", benefitsForChildren: "Y", covid19: "N", toilet: "Y", ramp: "Y", carPark: "Y", elevator: "Y", latitude: 50.0, longitude: 50.0, statistics: Statistics.defaultStatistics, dates: Dates.defaultDates, benefitsProvided: nil)
 }
 
 // MARK: - Statistics

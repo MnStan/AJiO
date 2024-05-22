@@ -25,7 +25,6 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack {
-            Text("\(NetworkManager.shared.shouldFetchMore)")
             ZStack {
                 if isShowingSearching {
                     VStack {
@@ -119,15 +118,19 @@ struct ContentView: View {
                                 }
                             }
                             
-                            if !networkManager.nearVoivodeshipsDataArray.isEmpty {
-                                Section("Pobliskie województwa") {
-                                    ForEach(networkManager.nearVoivodeshipsDataArray, id: \.id) { item in
-                                        ListItem(item: item)
-                                            .onTapGesture {
-                                                showDetailView = true
-                                                selectedItem = item
-                                            }
+                            if !NetworkManager.shared.dataArray.isEmpty {
+                                if !NetworkManager.shared.shouldFetchMore {
+                                    Section("Pobliskie województwa") {
+                                        ForEach(networkManager.nearVoivodeshipsDataArray, id: \.id) { item in
+                                            ListItem(item: item)
+                                                .onTapGesture {
+                                                    showDetailView = true
+                                                    selectedItem = item
+                                                }
+                                        }
                                     }
+                                } else {
+                                    ContentUnavailableView("Trwa pobieranie wyników z pobliskich województw", systemImage: "arrow.circlepath")
                                 }
                             }
                         }

@@ -168,10 +168,44 @@ class NetworkManager: ObservableObject {
                     if currentIndex < LocationManager.shared.nearVoivodeshipsArray.count - 1 {
                         currentIndex += 1
                     } else {
+                        sortNearVoivodeshipsArray()
                         shouldFetchMore = false
                     }
                 }
             }
+        }
+    }
+    
+    func extractDate(from string: String) -> String? {
+        let datePattern = #"^\d{4}-\d{2}-\d{2}$"#
+        let regex = try! Regex(datePattern)
+        
+        if string.firstMatch(of: regex) != nil {
+            return string
+        }
+        return nil
+    }
+    
+    func compareDates(_ dateString1: String, _ dateString2: String) -> Bool {
+        return dateString1 < dateString2
+    }
+    
+    func sortNearVoivodeshipsArray() {
+            nearVoivodeshipsDataArray = nearVoivodeshipsDataArray.sorted { (element1, element2) -> Bool in
+            let dateString1 = element1.attributes.dates?.date ?? ""
+            let dateString2 = element2.attributes.dates?.date ?? ""
+            
+            if dateString1.isEmpty {
+                return false
+            }
+            if dateString2.isEmpty {
+                return true
+            }
+            
+            let extractedDate1 = extractDate(from: dateString1) ?? ""
+            let extractedDate2 = extractDate(from: dateString2) ?? ""
+            
+            return compareDates(extractedDate1, extractedDate2)
         }
     }
     
