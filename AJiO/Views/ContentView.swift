@@ -25,6 +25,7 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack {
+            Text("\(NetworkManager.shared.shouldFetchMore)")
             ZStack {
                 if isShowingSearching {
                     VStack {
@@ -108,12 +109,26 @@ struct ContentView: View {
                             .focused($isTextFieldFocused)
                         
                         List {
-                            ForEach(networkManager.dataArray, id: \.id) { item in
-                                ListItem(item: item)
-                                    .onTapGesture {
-                                        showDetailView = true
-                                        selectedItem = item
+                            Section("Twoje województwo") {
+                                ForEach(networkManager.dataArray, id: \.id) { item in
+                                    ListItem(item: item)
+                                        .onTapGesture {
+                                            showDetailView = true
+                                            selectedItem = item
+                                        }
+                                }
+                            }
+                            
+                            if !networkManager.nearVoivodeshipsDataArray.isEmpty {
+                                Section("Pobliskie województwa") {
+                                    ForEach(networkManager.nearVoivodeshipsDataArray, id: \.id) { item in
+                                        ListItem(item: item)
+                                            .onTapGesture {
+                                                showDetailView = true
+                                                selectedItem = item
+                                            }
                                     }
+                                }
                             }
                         }
                         .matchedGeometryEffect(id: "list", in: namespace)
@@ -189,6 +204,9 @@ struct ContentView: View {
             if let selectedItem {
                 ListItemDetails(item: selectedItem)
             }
+        }
+        .onAppear {
+            
         }
     }
 }

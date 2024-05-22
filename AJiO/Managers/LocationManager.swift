@@ -25,7 +25,8 @@ final class LocationManager: NSObject, ObservableObject {
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var state: String?
     @Published var locations: [LocationData] = []
-    @Published var nearVoivodeships: Set<String> = []
+     var nearVoivodeships: Set<String> = []
+     var nearVoivodeshipsArray: [String] = []
     @Published var isLoadingNearVoivodeships = true
     @Published var shouldShowThrottledError = false
     @Published var didEndLocationWork = false
@@ -75,7 +76,6 @@ final class LocationManager: NSObject, ObservableObject {
         var errorOcurred = false
         
         var delay: TimeInterval = 0.0
-        print(points.count)
         for point in points {
             var leaveDispatchGroup = true
             
@@ -83,7 +83,7 @@ final class LocationManager: NSObject, ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                 guard let self = self else { return }
                 self.getVoivodeship(from: CLLocation(latitude: point.coordinate.latitude, longitude: point.coordinate.longitude)) { voivodeship, error in
-                    print("Getting voivodeship from points")
+
                     if let voivodeship = voivodeship {
                         if voivodeship != self.state {
                             voivodeships.append(voivodeship)
@@ -150,11 +150,11 @@ final class LocationManager: NSObject, ObservableObject {
         self.locations = points
     }
     
-    func getVoivodeshipCode() -> String? {
+    func getVoivodeshipCode(state: String? = LocationManager.shared.state) -> String? {
         guard let state = state else { return nil }
         
-        let standarizedName = state.replacingOccurrences(of: "-", with: "").lowercased().folding(options: .diacriticInsensitive, locale: .current)
-
+        let standarizedName = state.replacingOccurrences(of: "-", with: "").lowercased().folding(options: .diacriticInsensitive, locale: .current).replacingOccurrences(of: "ł", with: "l")
+        
         if let voivodeship = Voivodeship.allCases.first(where: { $0.name == standarizedName }) {
             return voivodeship.rawValue
         } else {
@@ -184,7 +184,6 @@ extension LocationManager: CLLocationManagerDelegate {
     
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("UPDATE LOCATION!!!!!!!")
         locations.last.map { location in
             userLocation = location.coordinate
             
@@ -206,6 +205,7 @@ extension LocationManager: CLLocationManagerDelegate {
                         self.shouldShowThrottledError = true
                     } else {
                         self.nearVoivodeships = Set(voivodeships)
+                        self.nearVoivodeshipsArray = Array(Set(voivodeships)).filter { $0 != self.state }
                         self.didEndLocationWork = true
                     }
                 }
