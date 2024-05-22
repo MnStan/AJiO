@@ -125,7 +125,6 @@ struct ListItemDetails: View {
             
             if let phoneNumber = item.attributes.phone {
                 let formattedPhoneNumber = phoneNumber.formatPhoneNumber()
-                Text(formattedPhoneNumber)
                 
                 if isValidPolishPhoneNumber(formattedPhoneNumber) {
                     GroupBox {
